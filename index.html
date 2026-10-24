@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>slabware</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23ffd23f' stroke='%23000' stroke-width='3'/></svg>">
+  <link rel="stylesheet" href="slabware.css">
+  <style>
+    /* just the docs page's own layout. everything else is the library */
+    body { padding: 48px 16px 96px; }
+    main { max-width: 920px; margin: 0 auto; display: flex; flex-direction: column; gap: 48px; }
+
+    .hero { padding: 28px 28px 24px; }
+    .hero .h1 { font-size: clamp(56px, 13vw, 120px); letter-spacing: -.04em; }
+    .hero p { max-width: 52ch; margin: 14px 0 0; }
+
+    .spec > header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; color: var(--white); }
+    .spec > header .h2 { text-shadow: 2px 2px 0 var(--ink); }
+    .spec > header p { margin: 0; font-size: 13px; }
+
+    .demo { padding: 20px; }
+    .demo + pre {
+      margin: 0;
+      padding: 10px 12px;
+      max-height: 220px;
+      overflow: auto;
+      background: var(--ink);
+      color: var(--lime);
+      font: 12px/1.5 var(--mono);
+      border: var(--line) solid var(--ink);
+      border-top: 0;
+      box-shadow: var(--drop) var(--drop) 0 var(--ink);
+    }
+    .sheet { display: flex; flex-direction: column; }
+
+    .swatch { padding: 10px 10px 8px; min-height: 84px; display: flex; flex-direction: column; justify-content: space-between; }
+    .swatch b { font: bold 18px var(--display); }
+
+    .rules { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
+    .rules b { font-family: var(--display); font-size: 16px; }
+
+    .desk { background: var(--desk); padding: 24px; border: 2px solid var(--ink); }
+    .demo:has(.desk) { padding: 0; }
+
+    @media (max-width: 560px) {
+      body { padding-top: 20px; }
+      .hero { padding: 20px 18px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="slab c-yellow hero">
+      <h1 class="h1 drop" style="color: var(--red)">slabware</h1>
+      <div class="ticker" style="margin: 16px -28px 0"><span>a component library from 1997, give or take &nbsp;★&nbsp; no rounded corners were harmed &nbsp;★&nbsp; best viewed at 800×600 &nbsp;★&nbsp; under construction forever</span></div>
+      <p>Three materials. A <b>slab</b> stands up: flat color, a 2px ink border and a hard shadow. A <b>key</b> presses: a loud keycap with a thick ink lip. A <b>well</b> sinks: the shadow falls inside it. Link <code>slabware.css</code>, and <code>slabware.js</code> if you want tabs, menus, dialogs and toasts to work.</p>
+      <div class="row" style="margin-top: 18px">
+        <a class="btn" href="#slab">slabs</a>
+        <a class="btn" href="#keys">keys</a>
+        <a class="btn" href="#wells">wells</a>
+        <a class="btn" href="#folders">folders</a>
+        <a class="btn" href="#charts">charts</a>
+        <a class="btn" href="#tokens">tokens</a>
+        <a class="btn" href="examples/dashboard.html">dashboard →</a>
+      </div>
+    </section>
+
+    <section class="spec">
+      <header><h2 class="h2">the rules</h2></header>
+      <div class="slab demo">
+        <ol class="rules">
+          <li><b>Nothing is rounded.</b> Not corners, not radios, not anything.</li>
+          <li><b>Shadows are solid ink, down and to the right.</b> No blur, no color, no spread.</li>
+          <li><b>Pressing sinks toward the shadow.</b> Hover pushes 2px in, active pushes all the way. Things never lift.</li>
+          <li><b>Stand, press or sink.</b> Slabs cast a shadow out, keys have a lip, wells hold their shadow inside. Pick one per thing.</li>
+          <li><b>Motion steps.</b> Animations use <code>steps()</code>, so they chunk along like a 1997 modem.</li>
+          <li><b>Flat paint.</b> Eleven solid colors and nothing else. Nothing fades, glows or goes see-through. Hover is always the same move: ink, with yellow type.</li>
+          <li><b>Bungee shouts, mono talks.</b> Bungee for names, headings and big numbers, Courier Prime for everything else.</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ============ SLAB ============ -->
+
+    <section class="spec" id="slab">
+      <header><h2 class="h2">slab</h2><p>the base material. color it with a <code>c-*</code> class or <code>--c</code>/<code>--fg</code>.</p></header>
+      <div class="sheet">
+        <div class="slab demo">
+          <div class="grid" style="--min: 150px">
+            <div class="slab" style="padding: 14px">paper, the default</div>
+            <div class="slab c-mint" style="padding: 14px">c-mint</div>
+            <div class="slab c-plum" style="padding: 14px">c-plum</div>
+            <div class="slab" style="--c: #ff6f00; padding: 14px">--c: #ff6f00</div>
+          </div>
+        </div>
+        <pre></pre>
+      </div>
+    </section>
+
+    <section class="spec">
+      <header><h2 class="h2">press</h2><p>add <code>.press</code> to make a slab pushable. a loud button is a pressed slab.</p></header>
+      <div class="sheet">
+        <div class="slab demo">
+          <div class="row" style="--gap: 16px">
+            <button class="slab press c-red" style="padding: 8px 18px; font-weight: bold">delete it</button>
+            <button class="slab press c-lime" style="padding: 8px 18px; font-weight: bold">ship it</button>
+            <a class="slab press c-blue" href="#press" style="padding: 8px 18px; text-decoration: none">a link, also</a>
+          </div>
+        </div>
+        <pre></pre>
+      </div>
+    </section>
+
+    <section class="spec">
+      <header><h2 class="h2">tile</h2><p>the homepage card. big name, a note, optional buttons. only the card itself presses.</p></header>
+      <div class="sheet">
+        <div class="slab demo">
+          <div class="grid">
+            <div class="tile c-yellow">
+              <a href="#tile"><b>admin</b><span>prod</span></a>
+              <nav><a class="btn sm" href="#tile">local</a><a class="btn sm" href="#tile">stage</a></nav>
+            </div>
+            <div class="tile c-plum">
+              <a href="#tile"><b>rodeo</b><span>onboarding</span></a>
+            </div>
+            <div class="tile c-mint">
+              <a href="#tile"><b>manager</b><span>local</span></a>
+              <nav><a class="btn sm" href="#tile">stage</a><a class="btn sm" href="#tile">prod</a></nav>
+            </div>
+          </div>
+        </div>
+        <pre></pre>
+      </div>
+    </section>
+
+    <section class="spec">
+      <header><h2 class="h2">badge</h2><p>a tiny slab with a tiny shadow.</p></header>
+      <div class="sheet">
+        <div class="slab demo">
+          <div class="row" style="--gap: 10px">
+            <span class="badge">new</span>
+            <span class="badge c-red">broken</span>
+            <span class="badge c-mint">live</span>
+            <span class="badge c-plum">beta</span>
+            <span class="badge c-ink">v0.1</span>
+          </div>
+        </div>
+        <pre></pre>
+      </div>
+    </section>
+
+    <section class="spec">
+      <header><h2 class="h2">callout</h2><p>a slab with a label stuck to its top edge.</p></header>
+      <div class="sheet">
+        <div class="slab demo">
+          <div class="grid" style="--min: 260px; --gap: 24px">
+            <div class="slab callout c-orange" data-label="heads up">Stage gets wiped every Sunday night. Don't keep anything there you'd miss.</div>
+            <div class="slab callout" data-label="note">Callouts take any <code>c-*</code> class, same as every slab.</div>
+          </div>
+        </div>
+        <pre></pre>
+      </div>
+    </section>
+
+    <section class="spec">
+      <header><h2 class="h2">links</h2><p>the ink-on-yellow hover. <code>.links</code> stacks them, <code>.hot</code> is one inline.</p></header>
+      <div class="sheet">
+        <div class="slab demo">
+          <div class="grid" style="--min: 150px">
+            <section class="links">
+              <h3 class="h3">leaseboard</h3>
+              <a href="#links">local</a>
+              <a href="#links">stage</a>
+              <a href="#links">airflow <span>stage</span></a>
+            </section>
+            <p style="margin: 0">Or inline: read the <a class="hot" href="#links">runbook</a> first.</p>
+          </div>
+        </div>
+        <pre></pre>
+      </div>
+    </section>
+
+    <section class="spec">
+      <header><h2 class="h2">table</h2><p>paper, ink rules, rows go ink under the cursor. <code>.num</code> right-aligns.</p></header>
+      <div class="sheet">
+        <div class="slab demo" style="overflow-x: auto">
+          <table class="table">
+            <thead><tr><th>service</th><th>env</th><th class="num">p95 ms</th><th>status</th></tr></thead>
+            <tbody>
+              <tr><td>storefront</td><td>prod</td><td class="num">212</td><td><span class="badge c-mint">ok</span></td></tr>
+              <tr><td>airflow</td><td>stage</td><td class="num">1,840</td><td><span class="badge c-orange">slow</span></td></tr>
+              <tr><td>printer</td><td>prod</td><td class="num">—</td><td><span class="badge c-red">down</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <pre></pre>
+      </div>
+    </section>
+
+    <section class="spec">
+      <header><h2 class="h2">ticker</h2><p>yes, a marquee. set <code>--speed</code> to taste. it stops for reduced motion.</p></header>
+      <div class="sheet">
+        <div class="slab demo">
+          <div class="ticker" style="--speed: 12s"><span>deploy freeze friday &nbsp;★&nbsp; stage is back up &nbsp;★&nbsp; someone left the tunnel open again</span></div>
+        </div>
+        <pre></pre>
+      </div>
+    </section>
+
+    <section class="spec">
+      <header><h2 class="h2">toast</h2><p>needs slabware.js. slides in from the right in four chunky steps. click to dismiss.</p></header>
+      <div class="sheet">
+        <div class="slab demo">
+          <div class="row">
+            <button class="btn" onclick="slabware.toast('saved.')">yellow</button>
+            <button class="btn c-mint" onclick="slabware.toast('deployed to stage', { c: 'mint' })">mint</button>
+            <button class="btn c-red" onclick="slabware.toast('build failed, again', { c: 'red', ms: 6000 })">red, 6s</button>
+          </div>
+        </div>
+        <pre></pre>
+      </div>
+    </section>
+
+    <!-- ============ KEYS ============ -->
+
+    <section class="spec" id="keys">
+      <header><h2 class="h2">key</h2><p>a loud keycap with an ink lip. pressing flips the lip to the top. color it with <code>c-*</code>; hover goes ink. <code>.sm</code> is the homepage size.</p></header>
+      <div class="sheet">
+        <div class="slab demo">
+          <div class="row" style="--gap: 10px">
+            <button class="btn c-mint">Deploy</button>
+            <button class="btn">Cancel</button>
+            <button class="btn" disabled>Apply</button>
+            <button class="btn" aria-pressed="true">Bold</button>
+            <button class="btn c-red">Delete</button>
+            <a class="btn sm c-blue" href="#keys">small</a>
+            <span>press <kbd class="kbd">ctrl</kbd> + <kbd class="kbd">s</kbd></span>
+          </div>
+        </div>
+        <pre></pre>
+      </div>
+    </section>
+
+    <section class="spec">
+      <header><h2 class="h2">menu</h2><p>a <code>details</code> with a key for a summary and a slab for a list. needs slabware.js to close on outside clicks.</p></header>
+      <div class="sheet">
+        <div class="slab demo" style="padding-bottom: 150px">
+          <details class="menu">
+            <summary class="btn">deploy ▾</summary>
+            <div class="menu-list">
+              <button>to stage <span>ctrl+s</span></button>
+              <button>to prod <span>ctrl+p</span></button>
+              <hr>
+              <button disabled>roll back</button>
+            </div>
+          </details>
+        </div>
+        <pre></pre>
+      </div>
+    </section>
+
+    <!-- ============ WELLS ============ -->
+
+    <section class="spec" id="wells">
+      <header><h2 class="h2">fields</h2><p>wells: the ink shadow falls inside. focus paints the well yellow.</p></header>
+      <div class="sheet">
+        <div class="slab demo">
+          <div class="grid" style="--min: 220px">
+            <label><span class="label">name</span><input class="field" style="width: 100%" value="tony"></label>
+            <label><span class="label">env</span>
+              <select class="field" style="width: 100%"><option>local</option><option>stage</option><option>prod</option></select>
+            </label>
+            <label><span class="label">disabled</span><input class="field" style="width: 100%" value="can't touch this" disabled></label>
+            <label style="grid-column: 1 / -1"><span class="label">notes</span><textarea class="field" style="width: 100%">remember to rotate the keys</textarea></label>
+          </div>
+        </div>
+        <pre></pre>
+      </div>
+    </section>
+
+    <section class="spec">
+      <header><h2 class="h2">checks and groups</h2><p>checked wells fill with color. radios get a diamond. <code>.group</code> is a cut-here box.</p></header>
+      <div class="sheet">
+        <div class="slab demo">
+          <div class="grid" style="--min: 220px">
+            <fieldset class="group stack" style="--gap: 8px">
+              <legend>notify me</legend>
+              <label class="opt"><input class="check" type="checkbox" checked> on deploy</label>
+              <label class="opt"><input class="check c-mint" type="checkbox" checked> on success</label>
+              <label class="opt"><input class="check" type="checkbox"> on failure</label>
+              <label class="opt"><input class="check" type="checkbox" disabled> never</label>
+            </fieldset>
+            <fieldset class="group stack" style="--gap: 8px">
+              <legend>environment</legend>
+              <label class="opt"><input class="check" type="radio" name="env" checked> local</label>
+              <label class="opt"><input class="check" type="radio" name="env"> stage</label>
+              <label class="opt"><input class="check" type="radio" name="env"> prod</label>
+            </fieldset>
+          </div>
+        </div>
+        <pre></pre>
+      </div>
+    </section>
+
+    <section class="spec">
+      <header><h2 class="h2">progress</h2><p>a well filling with hazard tape. set <code>--v</code> from 0 to 1. <code>.busy</code> marches.</p></header>
+      <div class="sheet">
+        <div class="slab demo">
+          <div class="stack">
+            <div class="progress" role="progressbar" aria-valuenow="62" style="--v: .62"></div>
+            <div class="progress c-red" role="progressbar" aria-valuenow="25" style="--v: .25"></div>
+            <div class="progress c-mint busy" role="progressbar"></div>
+          </div>
+        </div>
+        <pre></pre>
+      </div>
+    </section>
+
+    <section class="spec">
+      <header><h2 class="h2">scrollbars</h2><p>put <code>.scroll</code> on anything that scrolls. the thumb is a little slab. chromium only.</p></header>
+      <div class="sheet">
+        <div class="slab demo">
+          <div class="scroll field" style="height: 120px; overflow: auto; padding: 6px 10px">
+            <p style="margin: 0; width: 900px">A very long line that keeps going so there's something to scroll sideways too, past the edge of the box and out toward the end of the desk.</p>
+            <p>Line two.</p><p>Line three.</p><p>Line four.</p><p>Line five.</p><p>That's it.</p>
+          </div>
+        </div>
+        <pre></pre>
+      </div>
+    </section>
+
+    <!-- ============ FOLDERS ============ -->
+
+    <section class="spec" id="folders">
+      <header><h2 class="h2">folder</h2><p>a slab with a manila tab. color the folder, or give the tab its own.</p></header>
+      <div class="sheet">
+        <div class="slab demo">
+          <div class="desk grid" style="--min: 220px; --gap: 24px">
+            <section class="folder">
+              <header class="tab">deploy</header>
+              <div class="body stack">
+                <span>Copying files to stage…</span>
+                <div class="progress" style="--v: .45"></div>
+              </div>
+            </section>
+            <section class="folder c-mint">
+              <header class="tab">done <button class="btn sm" aria-label="close">×</button></header>
+              <div class="body">It worked. Go home.</div>
+            </section>
+            <section class="folder">
+              <header class="tab c-red">errors</header>
+              <div class="body">Three of them, all yours.</div>
+            </section>
+          </div>
+        </div>
+        <pre></pre>
+      </div>
+    </section>
+
+    <section class="spec">
+      <header><h2 class="h2">tabs</h2><p>folder tabs. the selected one joins the panel. needs slabware.js for clicks and arrow keys.</p></header>
+      <div class="sheet">
+        <div class="slab demo">
+          <div class="desk">
+            <div class="tabs c-paper">
+              <div role="tablist">
+                <button role="tab" aria-controls="tab-general" aria-selected="true">general</button>
+                <button role="tab" aria-controls="tab-deploy">deploy</button>
+                <button role="tab" aria-controls="tab-danger">danger</button>
+              </div>
+              <div role="tabpanel" id="tab-general">Nothing to see here. It's the general tab.</div>
+              <div role="tabpanel" id="tab-deploy"><div class="progress" style="--v: .8"></div></div>
+              <div role="tabpanel" id="tab-danger"><button class="slab press c-red" style="padding: 6px 14px">drop database</button></div>
+            </div>
+          </div>
+        </div>
+        <pre></pre>
+      </div>
+    </section>
+
+    <section class="spec">
+      <header><h2 class="h2">dialog</h2><p>a native <code>&lt;dialog class="folder"&gt;</code> over an ink checkerboard. needs slabware.js for <code>data-open</code>.</p></header>
+      <div class="sheet">
+        <div class="slab demo">
+          <button class="slab press c-orange" style="padding: 8px 18px; font-weight: bold" data-open="#confirm">deploy to prod…</button>
+          <dialog class="folder c-yellow" id="confirm">
+            <header class="tab">are you sure? <button class="btn sm" data-close aria-label="close">×</button></header>
+            <form method="dialog" class="body stack">
+              <p style="margin: 0">This will deploy <b>fishtank</b> to <b>prod</b>. It's Friday.</p>
+              <div class="row" style="justify-content: flex-end">
+                <button class="btn c-ink" value="ok" onclick="slabware.toast('godspeed', { c: 'lime' })">deploy</button>
+                <button class="btn" value="cancel">cancel</button>
+              </div>
+            </form>
+          </dialog>
+        </div>
+        <pre></pre>
+      </div>
+    </section>
+
+    <section class="spec">
+      <header><h2 class="h2">messy desk</h2><p>put <code>.messy</code> on a grid and everything in it lands a little crooked, like cards dropped on a desk. same mess on every load.</p></header>
+      <div class="sheet">
+        <div class="slab demo">
+          <div class="grid messy" style="--min: 150px; --gap: 20px">
+            <div class="tile c-yellow"><a href="#tiles"><b>admin</b><span>prod</span></a></div>
+            <div class="tile c-red"><a href="#tiles"><b>github</b><span>pulls</span></a></div>
+            <div class="tile c-mint"><a href="#tiles"><b>manager</b><span>local</span></a></div>
+            <div class="tile c-plum"><a href="#tiles"><b>rodeo</b><span>onboarding</span></a></div>
+            <div class="tile c-blue"><a href="#tiles"><b>stripe</b><span>money</span></a></div>
+          </div>
+        </div>
+        <pre></pre>
+      </div>
+    </section>
+
+    <section class="spec">
+      <header><h2 class="h2">drop</h2><p>type that stands up: loud letters with a hard ink shadow. color the letters anything but ink. best big: headings and numbers.</p></header>
+      <div class="sheet">
+        <div class="slab demo">
+          <div class="row" style="--gap: 32px">
+            <b class="h1 drop" style="color: var(--mint)">ops desk</b>
+            <b class="h1 drop" style="color: var(--red)">9,529</b>
+            <span class="slab c-blue" style="padding: 10px 16px"><b class="h1 drop" style="color: var(--yellow)">ship it</b></span>
+          </div>
+        </div>
+        <pre></pre>
+      </div>
+    </section>
+
+    <section class="spec">
+      <header><h2 class="h2">stamp and tilt</h2><p><code>.stamp</code> is a solid block slammed on crooked: printed flat, so no shadow. color it like anything else. <code>.tilt</code> tapes things on crooked.</p></header>
+      <div class="sheet">
+        <div class="slab demo">
+          <div class="desk row" style="--gap: 32px; padding: 32px">
+            <div class="slab tilt" style="padding: 16px 18px; width: 220px">
+              <b class="h3">invoice #0042</b>
+              <p style="margin: 8px 0 12px">$1,200 for one (1) homepage.</p>
+              <span class="stamp">paid</span>
+            </div>
+            <div class="slab c-yellow tilt-r" style="padding: 16px 18px; width: 200px">
+              <b class="h3">pr #6531</b>
+              <p style="margin: 8px 0 12px">needs one more look</p>
+              <span class="stamp c-blue" style="--fg: var(--yellow)">approved</span>
+            </div>
+          </div>
+        </div>
+        <pre></pre>
+      </div>
+    </section>
+
+    <!-- ============ CHARTS ============ -->
+
+    <section class="spec" id="charts">
+      <header><h2 class="h2">stat</h2><p>when the story is one number, the number is the chart. <code>data-spark</code> draws the trend under it.</p></header>
+      <div class="sheet">
+        <div class="slab demo">
+          <div class="grid" style="--min: 190px">
+            <div class="slab stat c-red">
+              <span class="label caps">signups</span>
+              <span class="value">1,284</span>
+              <span class="delta good">▲ 12% vs last week</span>
+              <div data-spark="820,870,910,880,960,1010,990,1050,1120,1090,1180,1284"></div>
+            </div>
+            <div class="slab stat c-plum" style="--fg: var(--lime)">
+              <span class="label caps">p95 latency</span>
+              <span class="value">212ms</span>
+              <span class="delta bad">▲ 38ms vs last week</span>
+              <div data-spark="160,170,168,175,180,172,190,186,195,201,205,212"></div>
+            </div>
+            <div class="slab stat c-blue" style="--fg: var(--yellow)">
+              <span class="label caps">mrr</span>
+              <span class="value">$48.2K</span>
+              <span class="delta good">▲ $2.1K vs last month</span>
+              <div data-spark="38,39,40,41,41.5,43,44,44.5,45,46,46.1,48.2"></div>
+            </div>
+          </div>
+        </div>
+        <pre></pre>
+      </div>
+    </section>
+
+    <section class="spec">
+      <header><h2 class="h2">line</h2><p>trend over time: fat flat ribbons straight on the card, each casting a hard ink shadow, no outlines, no gridlines. each series ends in a chip of its own color with its latest value. <code>shape: "steps"</code> draws staircases. hover or tab in for the crosshair; the legend toggles series; the table key shows the numbers.</p></header>
+      <div class="sheet">
+        <div class="slab demo">
+          <figure class="slab chart c-mint" id="chart-line">
+            <figcaption><div><b class="h3">requests</b><span class="dim">per day, by app, last 2 weeks</span></div></figcaption>
+          </figure>
+          <script type="module">
+            slabware.chart.line("#chart-line", {
+              x: ["oct 10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"],
+              series: [
+                { name: "storefront", values: [4200, 4500, 4300, 4800, 5100, 3900, 3600, 4700, 5200, 5400, 5300, 5800, 6100, 6400] },
+                { name: "manager", values: [2100, 2200, 2500, 2300, 2600, 1800, 1500, 2400, 2700, 2900, 2800, 3000, 3100, 3300] },
+                { name: "admin", values: [600, 650, 700, 720, 680, 300, 250, 760, 800, 820, 790, 850, 900, 940] },
+              ],
+            });
+          </script>
+        </div>
+        <pre></pre>
+      </div>
+    </section>
+
+    <section class="spec">
+      <header><h2 class="h2">area</h2><p>one series is a solid cut-paper hill, its shadow along the ridge, and needs no legend; the title names it.</p></header>
+      <div class="sheet">
+        <div class="slab demo">
+          <figure class="slab chart c-red" id="chart-area" style="max-width: 560px"></figure>
+          <script type="module">
+            slabware.chart.line("#chart-area", {
+              title: "error rate",
+              note: "% of requests, today",
+              x: ["00", "02", "04", "06", "08", "10", "12", "14", "16", "18", "20", "22"],
+              series: [{ name: "errors", values: [.4, .3, .3, .5, 1.2, 2.8, 1.9, 1.1, .9, .8, .6, .5] }],
+              format: v => v.toFixed(1) + "%",
+              height: 180,
+            });
+          </script>
+        </div>
+        <pre></pre>
+      </div>
+    </section>
+
+    <section class="spec">
+      <header><h2 class="h2">bar</h2><p>columns compare magnitude. every bar is a slab with a hard shadow and its value in an ink tag. hover one and it presses in.</p></header>
+      <div class="sheet">
+        <div class="slab demo">
+          <figure class="slab chart c-lime" id="chart-bar"></figure>
+          <script type="module">
+            slabware.chart.bar("#chart-bar", {
+              title: "deploys",
+              note: "per week",
+              categories: ["w36", "w37", "w38", "w39", "w40", "w41", "w42", "w43"],
+              series: [{ name: "deploys", values: [12, 18, 9, 22, 17, 25, 14, 20] }],
+            });
+          </script>
+        </div>
+        <pre></pre>
+      </div>
+    </section>
+
+    <section class="spec">
+      <header><h2 class="h2">stacked and horizontal</h2><p><code>stacked</code> for part-to-whole, with the total on top. <code>horizontal</code> when the names are long.</p></header>
+      <div class="sheet">
+        <div class="slab demo">
+          <div class="grid" style="--min: 320px; --gap: 20px">
+            <figure class="slab chart c-orange" id="chart-stack"></figure>
+            <figure class="slab chart c-red" id="chart-hbar"></figure>
+          </div>
+          <script type="module">
+            slabware.chart.bar("#chart-stack", {
+              title: "tickets",
+              note: "by state, per month",
+              stacked: true,
+              categories: ["may", "jun", "jul", "aug", "sep", "oct"],
+              series: [
+                { name: "closed", values: [42, 51, 47, 60, 55, 63] },
+                { name: "open", values: [12, 9, 15, 11, 14, 8] },
+                { name: "blocked", values: [3, 5, 2, 4, 6, 2] },
+              ],
+            });
+            slabware.chart.bar("#chart-hbar", {
+              title: "slowest endpoints",
+              note: "p95 ms",
+              horizontal: true,
+              categories: ["/api/search", "/api/items", "/manager/orders", "/admin/users", "/api/auth"],
+              series: [{ name: "p95", values: [1840, 920, 610, 380, 140] }],
+              format: v => v.toLocaleString("en-US") + "ms",
+            });
+          </script>
+        </div>
+        <pre></pre>
+      </div>
+    </section>
+
+    <section class="spec">
+      <header><h2 class="h2">heatmap</h2><p>magnitude on a board of tiles set in ink, running hot from yellow through orange and red to plum. arrow keys walk the cells.</p></header>
+      <div class="sheet">
+        <div class="slab demo">
+          <figure class="slab chart c-blue" id="chart-heat"></figure>
+          <script type="module">
+            const hours = Array.from({ length: 24 }, (_, h) => String(h).padStart(2, "0"));
+            const days = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+            slabware.chart.heatmap("#chart-heat", {
+              title: "traffic by hour",
+              note: "requests, last week",
+              rows: days,
+              cols: hours,
+              values: days.map((_, d) => hours.map((_, h) =>
+                Math.round((d > 4 ? 120 : 300) * (1 + Math.sin((h - 8) / 24 * Math.PI * 2)) + (h * 37 + d * 91) % 60))),
+            });
+          </script>
+        </div>
+        <pre></pre>
+      </div>
+    </section>
+
+    <section class="spec">
+      <header><h2 class="h2">gauge</h2><p>a cartoon car dashboard, in as few shapes as it takes: a faceted face, a block per zone, a fat needle, the number. paint the face with <code>--dial</code> and the needle with <code>--needle</code>, and pick an odd pair. <code>shape: "bar"</code> is the fuel gauge.</p></header>
+      <div class="sheet">
+        <div class="slab demo">
+          <div class="grid" style="--min: 220px">
+            <figure class="slab chart c-red" id="gauge-cpu"></figure>
+            <figure class="slab chart c-mint" id="gauge-disk" style="--dial: var(--plum); --needle: var(--lime)"></figure>
+            <figure class="slab chart c-ink" id="gauge-err" style="--dial: var(--red); --needle: var(--mint)"></figure>
+          </div>
+          <figure class="slab chart c-orange" id="gauge-bar" style="--dial: var(--blue); --needle: var(--orange)" style="margin-top: 20px"></figure>
+          <script type="module">
+            const zones = [
+              { upTo: 60, status: "good", label: "fine" },
+              { upTo: 80, status: "warning", label: "busy" },
+              { upTo: 90, status: "serious", label: "hot" },
+              { upTo: 100, status: "critical", label: "on fire" },
+            ];
+            slabware.chart.gauge("#gauge-cpu", { title: "cpu", value: 42, unit: "%", zones });
+            slabware.chart.gauge("#gauge-disk", { title: "disk", value: 84, unit: "%", zones });
+            slabware.chart.gauge("#gauge-err", { title: "errors", value: 96, unit: "%", zones });
+            slabware.chart.gauge("#gauge-bar", { title: "memory", value: 71, unit: "%", zones, shape: "bar" });
+          </script>
+        </div>
+        <pre></pre>
+      </div>
+    </section>
+
+    <!-- ============ TOKENS ============ -->
+
+    <section class="spec" id="tokens">
+      <header><h2 class="h2">tokens</h2><p>every color is a custom property on <code>:root</code>. the loud ones have <code>c-*</code> classes.</p></header>
+      <div class="slab demo">
+        <div class="grid" style="--min: 130px" id="swatches"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="slabware.js"></script>
+  <script src="slabware-charts.js"></script>
+  <script>
+    // swatches, read straight off :root so they can't drift from the css
+    const css = getComputedStyle(document.documentElement);
+    const SWATCHES = ["yellow", "orange", "red", "plum", "blue", "mint", "lime", "paper", "white", "ink", "desk"];
+    document.getElementById("swatches").innerHTML = SWATCHES.map(name => {
+      const hex = css.getPropertyValue("--" + name).trim();
+      const cls = "c-" + name;
+      const [r, g, b] = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16));
+      const style = cls ? "" : `style="--c: var(--${name}); --fg: ${r * .299 + g * .587 + b * .114 < 140 ? "#fff" : "#000"}"`;
+      return `<div class="slab swatch ${cls}" ${style}><b>${name}</b><span class="caps">${hex}</span></div>`;
+    }).join("");
+
+    // every demo prints its own markup underneath, so the docs can't drift either
+    const esc = s => s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
+    for (const demo of document.querySelectorAll(".demo")) {
+      const pre = demo.nextElementSibling;
+      if (pre?.tagName !== "PRE") continue;
+      const lines = demo.innerHTML.replace(/^\n+|\s+$/g, "").split("\n");
+      const indent = Math.min(...lines.filter(l => l.trim()).map(l => l.match(/^ */)[0].length));
+      pre.innerHTML = esc(lines.map(l => l.slice(indent)).join("\n"));
+    }
+  </script>
+</body>
+</html>

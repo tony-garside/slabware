@@ -1,0 +1,705 @@
+/* slabware — a component library from 1997, give or take.
+   teal desk, loud slabs, hard shadows, no rounding anywhere.
+
+   flat paint only: every color is solid, nothing is see-through, nothing glows.
+
+   three materials, and every component is made of one of them:
+     slab — stands up. flat color, 2px ink border, a solid shadow down and to the right
+     key  — presses. a loud keycap with an ink outline and a thick ink lip along the bottom
+     well — sinks. a hole in the desk: ink outline, the hard shadow falls inside, top left */
+
+/* the voices: Bungee shouts (names, headings, big numbers), Courier Prime talks.
+   both are bundled in fonts/ under the SIL Open Font License, so pages work offline */
+@font-face { font-family: "Bungee"; src: url(fonts/bungee-latin.woff2) format("woff2"); font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Bungee"; src: url(fonts/bungee-latin-ext.woff2) format("woff2"); font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: "Courier Prime"; src: url(fonts/courier-prime-latin.woff2) format("woff2"); font-weight: 400; font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Courier Prime"; src: url(fonts/courier-prime-latin-ext.woff2) format("woff2"); font-weight: 400; font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: "Courier Prime"; src: url(fonts/courier-prime-bold-latin.woff2) format("woff2"); font-weight: 700; font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Courier Prime"; src: url(fonts/courier-prime-bold-latin-ext.woff2) format("woff2"); font-weight: 700; font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+
+/* --c is a thing's color, --fg its text. they don't inherit, so a slab inside a
+   red slab is paper again unless you say otherwise */
+@property --c { syntax: "<color>"; inherits: false; initial-value: #f2ead3; }
+@property --fg { syntax: "<color>"; inherits: false; initial-value: #000; }
+
+:root {
+  color-scheme: light;
+
+  /* eleven colors, and that's all of them. four neutrals... */
+  --desk: #008080;
+  --ink: #000;
+  --paper: #f2ead3;
+  --white: #fffdf6;
+
+  /* ...and seven loud ones */
+  --yellow: #ffd23f;
+  --orange: #f78c3b;
+  --red: #ee4266;
+  --plum: #540d6e;
+  --blue: #4361ee;
+  --mint: #3bceac;
+  --lime: #b8f35a;
+
+  --display: "Bungee", "Times New Roman", serif;
+  --mono: "Courier Prime", "Courier New", monospace;
+
+  --line: 2px;
+  /* two shadows: --drop for things you look at, --drop-sm for little chips on them */
+  --drop: 5px;
+  --drop-sm: 2px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--desk);
+  color: var(--ink);
+  font: 14px/1.5 var(--mono);
+  /* bungee comes in one weight, so never smear a fake bold onto it */
+  font-synthesis: none;
+}
+
+a { color: inherit; }
+
+::selection { background: var(--ink); color: var(--yellow); }
+
+:focus-visible { outline: 2px dashed var(--ink); outline-offset: 3px; }
+
+
+/* ---------- type ---------- */
+
+.h1 { font: bold 48px/.95 var(--display); letter-spacing: -.02em; margin: 0; }
+.h2 { font: bold 26px/1 var(--display); letter-spacing: -.01em; margin: 0; }
+.h3 { font: bold 18px/1.1 var(--display); margin: 0; }
+.caps { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+/* type that stands up: loud letters with a hard ink shadow, down and to the right
+   like a slab's. color the letters anything but ink, or the shadow swallows them */
+.drop { text-shadow: max(2px, .07em) max(2px, .07em) 0 var(--ink); }
+/* quieter text is smaller and spaced out, never faded */
+.dim, .links a span, .menu-list > * > span { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
+
+
+/* ---------- layout ---------- */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--min, 196px), 1fr));
+  gap: var(--gap, 16px);
+}
+
+.stack { display: flex; flex-direction: column; gap: var(--gap, 12px); }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap, 8px); }
+
+/* taped on a little crooked */
+.tilt { rotate: -1.5deg; }
+.tilt-r { rotate: 1.5deg; }
+
+/* messy desk: put .messy on a grid and everything in it lands a little crooked,
+   like cards dropped on a desk. the mess repeats every seven, so it's the same on every load */
+.messy > :nth-child(7n+1) { rotate: -2.5deg; translate: 0 4px; }
+.messy > :nth-child(7n+2) { rotate: 1.5deg; translate: 0 -3px; }
+.messy > :nth-child(7n+3) { rotate: -1deg; translate: 3px 6px; }
+.messy > :nth-child(7n+4) { rotate: 3deg; translate: -2px 0; }
+.messy > :nth-child(7n+5) { rotate: -3.5deg; translate: 2px 2px; }
+.messy > :nth-child(7n+6) { rotate: .5deg; translate: 0 8px; }
+.messy > :nth-child(7n+7) { rotate: 2deg; translate: -3px -4px; }
+
+
+/* ---------- slab: stands up ---------- */
+
+.slab, .tile, .folder > .body {
+  background: var(--c);
+  color: var(--fg);
+  border: var(--line) solid var(--ink);
+  box-shadow: var(--drop) var(--drop) 0 var(--ink);
+}
+
+/* pushing a slab sinks it toward its shadow. it never lifts */
+.press { cursor: pointer; font: inherit; text-align: inherit; }
+.press:hover, .tile:has(> a:hover) {
+  transform: translate(2px, 2px);
+  box-shadow: calc(var(--drop) - 2px) calc(var(--drop) - 2px) 0 var(--ink);
+}
+.press:active { transform: translate(var(--drop), var(--drop)); box-shadow: none; }
+
+/* the homepage tile: big name, small caps note, optional row of keys.
+   the card only presses when the cursor is on the card itself, not a key */
+.tile { display: flex; flex-direction: column; }
+.tile > a { flex: 1; padding: 12px 12px 10px; text-decoration: none; }
+.tile > a b { display: block; font: bold 26px/1 var(--display); letter-spacing: -.01em; }
+.tile > a:hover b { text-decoration: underline; }
+.tile > a span { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+.tile > nav { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 10px 10px; }
+
+/* a slab with a manila tab on top. the tab takes the folder's color unless
+   it gets its own. dialogs are folders too */
+.folder { display: flex; flex-direction: column; align-items: flex-start; }
+.folder > * { --c: inherit; --fg: inherit; }
+.folder > .tab {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  margin-bottom: -3px; /* one past the border, so sub-pixel rounding can't leave a seam */
+  padding: 6px 12px 8px;
+  background: var(--c);
+  color: var(--fg);
+  border: var(--line) solid var(--ink);
+  border-bottom: 0;
+  font: bold 16px/1 var(--display);
+}
+/* a tab's shadow only falls to its right; the panel below it casts the rest.
+   a block, not a clipped box-shadow, which leaves a seam at fractional offsets */
+.folder > .tab::after, .tabs [role="tab"][aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  top: calc(var(--drop) - var(--line));
+  right: calc(var(--drop) * -1 - var(--line));
+  bottom: 1px;
+  width: var(--drop);
+  background: var(--ink);
+}
+.folder > .body { align-self: stretch; padding: 14px; }
+
+.badge {
+  --c: var(--yellow);
+  display: inline-block;
+  background: var(--c);
+  color: var(--fg);
+  border: var(--line) solid var(--ink);
+  box-shadow: var(--drop-sm) var(--drop-sm) 0 var(--ink);
+  font: bold 11px/1.3 var(--mono);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+
+/* a stamp: a solid block of color slammed on crooked. it's printed onto whatever
+   it lands on, so it lies flat: no shadow. the inner rule in the text color is
+   the double border every rubber stamp has, done in flat paint */
+.stamp {
+  --c: var(--red);
+  --fg: var(--white);
+  display: inline-block;
+  rotate: -7deg;
+  padding: 7px 13px 6px;
+  background: var(--c);
+  color: var(--fg);
+  border: 3px solid var(--ink);
+  box-shadow: inset 0 0 0 3px var(--c), inset 0 0 0 5px var(--fg);
+  font: 22px/1 var(--display);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+/* ink labels: black with yellow type, no shadow. callout labels, group legends,
+   tooltips and the ticker are all this one thing */
+.callout[data-label]::before, .group > legend, [data-tip]:hover::after, .chart-tip, .ticker {
+  background: var(--ink);
+  color: var(--yellow);
+  font: bold 11px/1.3 var(--mono);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  padding: 2px 7px;
+}
+
+/* a slab with a label stuck on its top edge */
+.callout { position: relative; padding: 18px 16px 14px; margin-top: 12px; }
+.callout[data-label]::before { content: attr(data-label); position: absolute; top: -11px; left: 10px; }
+
+.table {
+  border-collapse: collapse;
+  background: var(--paper);
+  border: var(--line) solid var(--ink);
+  box-shadow: var(--drop) var(--drop) 0 var(--ink);
+  font-size: 13px;
+}
+.table th {
+  background: var(--ink);
+  color: var(--paper);
+  font: bold 15px/1.2 var(--display);
+  text-align: left;
+  padding: 6px 10px;
+}
+.table td { padding: 5px 10px; border-top: 1px solid var(--ink); }
+/* one hover everywhere: the thing goes ink, its type goes yellow */
+.table tbody tr:hover { background: var(--ink); color: var(--yellow); }
+.table .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* links that invert on hover. .links stacks them, .hot is one inline */
+.hot, .links a { padding: 0 4px; margin-left: -4px; text-decoration: none; }
+.links a { display: block; width: fit-content; }
+.hot:hover, .links a:hover { background: var(--ink); color: var(--yellow); }
+
+.menu { position: relative; display: inline-block; }
+.menu > summary { list-style: none; }
+.menu > summary::-webkit-details-marker { display: none; }
+.menu-list {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 10;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0;
+  background: var(--paper);
+  border: var(--line) solid var(--ink);
+  box-shadow: var(--drop) var(--drop) 0 var(--ink);
+}
+.menu-list > a, .menu-list > button {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 4px 14px;
+  font: 13px/1.4 var(--mono);
+  color: inherit;
+  text-align: left;
+  text-decoration: none;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.menu-list > :hover { background: var(--ink); color: var(--yellow); }
+.menu-list > :disabled { background: none; color: inherit; text-decoration: line-through; cursor: default; }
+.menu-list > hr { width: 100%; margin: 4px 0; border: 0; border-top: var(--line) dashed var(--ink); }
+
+/* folder tabs: the selected one joins the panel, the rest wait behind in white */
+.tabs { display: flex; flex-direction: column; }
+.tabs > * { --c: inherit; --fg: inherit; }
+.tabs [role="tablist"] { display: flex; gap: 4px; }
+.tabs [role="tab"] {
+  position: relative;
+  margin-top: 6px;
+  padding: 6px 14px 7px;
+  font: bold 15px/1 var(--display);
+  color: var(--ink);
+  background: var(--white);
+  border: var(--line) solid var(--ink);
+  border-bottom: 0;
+  cursor: pointer;
+}
+.tabs [role="tab"]:hover { background: var(--ink); color: var(--yellow); }
+.tabs [role="tab"][aria-selected="true"] {
+  --c: inherit;
+  --fg: inherit;
+  z-index: 1;
+  margin: 0 0 -3px;
+  padding-bottom: 10px;
+  background: var(--c);
+  color: var(--fg);
+}
+.tabs [role="tabpanel"] {
+  padding: 14px;
+  background: var(--c);
+  color: var(--fg);
+  border: var(--line) solid var(--ink);
+  box-shadow: var(--drop) var(--drop) 0 var(--ink);
+}
+
+.ticker { overflow: hidden; white-space: nowrap; padding: 3px 0; font-size: 13px; line-height: 1.4; }
+.ticker > * { display: inline-block; padding-left: 100%; animation: sw-ticker var(--speed, 18s) linear infinite; }
+@keyframes sw-ticker { to { transform: translateX(-100%); } }
+
+.toasts {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+.toast {
+  --c: var(--yellow);
+  background: var(--c);
+  color: var(--fg);
+  border: var(--line) solid var(--ink);
+  box-shadow: var(--drop) var(--drop) 0 var(--ink);
+  padding: 8px 12px;
+  max-width: 320px;
+  cursor: pointer;
+  animation: sw-toast-in .24s steps(4) both;
+}
+.toast.out { animation: sw-toast-out .15s steps(3) both; }
+@keyframes sw-toast-in { from { transform: translateX(calc(100% + 32px)); } }
+@keyframes sw-toast-out { to { transform: translateX(calc(100% + 32px)); } }
+
+/* tooltips are ink labels, like a hot link that's always hovered */
+[data-tip] { position: relative; }
+[data-tip]:hover::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: 0;
+  top: calc(100% + 8px);
+  z-index: 20;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: sw-wait .35s steps(1, end) both;
+}
+@keyframes sw-wait { from { visibility: hidden; } }
+
+/* the scrollbar thumb is a little slab in a paper gutter. chromium only */
+.scroll::-webkit-scrollbar { width: 14px; height: 14px; }
+.scroll::-webkit-scrollbar-track { background: var(--paper); }
+.scroll::-webkit-scrollbar-track:vertical { border-left: var(--line) solid var(--ink); }
+.scroll::-webkit-scrollbar-track:horizontal { border-top: var(--line) solid var(--ink); }
+.scroll::-webkit-scrollbar-thumb { background: var(--yellow); border: var(--line) solid var(--ink); }
+.scroll::-webkit-scrollbar-thumb:hover { background: var(--ink); }
+.scroll::-webkit-scrollbar-corner { background: var(--ink); }
+
+
+/* ---------- key: presses ---------- */
+
+/* keys are loud. the ink lip sits along the bottom; pressing flips it to the top,
+   so the face looks pushed in without the key moving */
+.btn {
+  --c: var(--yellow);
+  display: inline-block;
+  font: bold 13px/1.4 var(--mono);
+  color: var(--fg);
+  background: var(--c);
+  padding: 3px 14px 5px;
+  border: var(--line) solid var(--ink);
+  box-shadow: inset 0 -3px 0 var(--ink);
+  text-decoration: none;
+  cursor: pointer;
+}
+.btn.sm { font-size: 12px; padding: 1px 8px 3px; }
+.btn:hover { background: var(--ink); color: var(--yellow); }
+.btn:active, .btn[aria-pressed="true"], .menu[open] > summary.btn {
+  background: var(--c);
+  color: var(--fg);
+  box-shadow: inset 0 3px 0 var(--ink);
+  padding-top: 5px;
+  padding-bottom: 3px;
+}
+.btn.sm:active, .btn.sm[aria-pressed="true"], .menu[open] > summary.btn.sm { padding-top: 3px; padding-bottom: 1px; }
+/* disabled is a dashed outline of a key: paper, no lip, struck through */
+.btn:disabled, .btn[aria-disabled="true"] {
+  background: var(--paper);
+  color: var(--ink);
+  border-style: dashed;
+  box-shadow: none;
+  text-decoration: line-through;
+  padding: 4px 14px;
+  cursor: not-allowed;
+}
+
+.kbd {
+  display: inline-block;
+  font: 12px/1.3 var(--mono);
+  background: var(--white);
+  padding: 0 5px 2px;
+  border: var(--line) solid var(--ink);
+  box-shadow: inset 0 -2px 0 var(--ink);
+}
+
+
+/* ---------- well: sinks ---------- */
+
+.label { display: block; margin-bottom: 4px; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+
+/* the hard shadow falls inside, top left, in solid ink. focus paints the well yellow */
+.field {
+  font: 13px/1.4 var(--mono);
+  color: var(--ink);
+  background: var(--white);
+  padding: 5px 8px 4px 10px;
+  border: var(--line) solid var(--ink);
+  border-radius: 0;
+  box-shadow: inset 3px 3px 0 var(--ink);
+}
+.field:focus { background: var(--yellow); }
+.field:disabled { background: var(--paper); border-style: dashed; box-shadow: none; }
+textarea.field { resize: vertical; min-height: 4.5em; }
+select.field {
+  appearance: none;
+  padding-right: 30px;
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0h10L5 6z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
+
+/* checked fills the well with color. radios get a diamond: nothing is round here */
+.check {
+  --c: var(--yellow);
+  appearance: none;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  vertical-align: -4px;
+  display: inline-grid;
+  place-content: center;
+  background: var(--white);
+  border: var(--line) solid var(--ink);
+  box-shadow: inset 2px 2px 0 var(--ink);
+  cursor: pointer;
+}
+.check:checked { background: var(--c); box-shadow: none; }
+.check:checked::before { content: ""; width: 10px; height: 10px; background: var(--ink); }
+.check[type="checkbox"]:checked::before { clip-path: polygon(0 50%, 15% 35%, 40% 60%, 85% 10%, 100% 25%, 40% 90%); }
+.check[type="radio"]:checked::before { clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+.check:disabled { background: var(--paper); border-style: dashed; box-shadow: none; cursor: not-allowed; }
+.opt { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+
+/* a cut-here box with an ink label */
+.group { margin: 0; padding: 14px; border: var(--line) dashed var(--ink); }
+
+.rule { border: 0; border-top: var(--line) dashed var(--ink); margin: 12px 0; }
+
+/* a well filling up with hazard tape */
+.progress {
+  --c: var(--yellow);
+  height: 22px;
+  overflow: hidden;
+  background: var(--white);
+  border: var(--line) solid var(--ink);
+  box-shadow: inset 3px 3px 0 var(--ink);
+}
+.progress::before {
+  --c: inherit;
+  content: "";
+  display: block;
+  height: 100%;
+  width: calc(var(--v, 0) * 100%);
+  background: linear-gradient(-45deg, var(--ink) 25%, var(--c) 0 50%, var(--ink) 0 75%, var(--c) 0) 0 0 / 16px 16px;
+  border-right: var(--line) solid var(--ink);
+}
+.progress.busy::before { width: 100%; border: 0; animation: sw-march .5s steps(4) infinite; }
+@keyframes sw-march { to { background-position: 16px 0; } }
+
+
+/* ---------- dialogs: a folder over a dithered desk ---------- */
+
+dialog.folder {
+  width: min(440px, calc(100vw - 32px));
+  padding: 0 var(--drop) var(--drop) 0;
+  border: 0;
+  background: none;
+  overflow: visible;
+  animation: sw-dialog-in .2s steps(3) both;
+}
+dialog.folder:not([open]) { display: none; }
+/* the desk behind goes to a hard ink checkerboard: a pattern, not a fade */
+dialog.folder::backdrop { background: repeating-conic-gradient(var(--ink) 0 25%, transparent 0 50%) 0 0 / 4px 4px; }
+@keyframes sw-dialog-in { from { transform: translateY(-16px); } }
+
+
+/* ---------- charts: slabware-charts.js draws them, this dresses them ----------
+   charts are made of the same stuff as everything else: every mark is a little
+   slab, solid color with an ink outline, and bars cast a hard shadow. the ink
+   outline is what keeps pale yellow readable on paper, and lines also get a
+   marker shape per series, so nothing is told apart by color alone */
+
+:root {
+  --viz-1: var(--blue);
+  --viz-2: var(--yellow);
+  --viz-3: var(--red);
+  --viz-4: var(--mint);
+  --viz-5: var(--plum);
+  --viz-6: var(--orange);
+  --viz-7: var(--lime);
+  --viz-other: var(--white);
+
+  /* magnitude: a heat ramp in four steps, yellow to plum, darker as it gets busier */
+  --seq-1: var(--yellow);
+  --seq-2: var(--orange);
+  --seq-3: var(--red);
+  --seq-4: var(--plum);
+
+  /* status means good or bad, and only that. it always comes with an icon and a word */
+  --good: var(--mint);
+  --warning: var(--yellow);
+  --serious: var(--orange);
+  --critical: var(--red);
+}
+
+/* a chart is a paper slab with a colored band across the top. c-* colors the band */
+.chart {
+  --c: var(--yellow);
+  --band: var(--c);
+  --band-fg: var(--fg);
+  margin: 0;
+  padding: 0 16px 14px;
+  min-width: 0;
+  background: var(--paper);
+  color: var(--ink);
+}
+.chart > figcaption {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 -16px 14px;
+  padding: 8px 10px 8px 16px;
+  background: var(--band);
+  color: var(--band-fg);
+  border-bottom: var(--line) solid var(--ink);
+}
+.chart > figcaption > :first-child { flex: 1; display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 10px; }
+.chart > figcaption .h3 { font-size: 24px; line-height: 1.1; }
+.chart > figcaption .chart-toggle { flex: none; color: var(--ink); }
+
+.legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-bottom: 12px; font: bold 12px var(--mono); }
+.legend:empty { display: none; }
+.legend button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 8px 3px 5px;
+  font: inherit;
+  color: var(--ink);
+  background: var(--white);
+  border: var(--line) solid var(--ink);
+  box-shadow: var(--drop-sm) var(--drop-sm) 0 var(--ink);
+  cursor: pointer;
+}
+.legend button:hover { background: var(--ink); color: var(--yellow); }
+.legend button:active { translate: var(--drop-sm) var(--drop-sm); box-shadow: none; }
+/* a hidden series is a dashed, empty chip, struck through */
+.legend button[aria-pressed="false"] { box-shadow: none; translate: var(--drop-sm) var(--drop-sm); border-style: dashed; background: var(--paper); }
+.legend button[aria-pressed="false"] span { text-decoration: line-through; }
+.legend button[aria-pressed="false"] :is(svg, i) { visibility: hidden; }
+.legend i, .chart-tip i { flex: none; display: inline-block; width: 12px; height: 12px; border: var(--line) solid var(--ink); }
+.legend svg { display: block; overflow: visible; }
+.legend .scale { display: inline-flex; border: var(--line) solid var(--ink); box-shadow: var(--drop-sm) var(--drop-sm) 0 var(--ink); }
+.legend .scale i { width: 22px; height: 14px; border: 0; }
+.legend .scale i + i { border-left: var(--line) solid var(--ink); }
+
+.plot { position: relative; }
+.plot:empty { display: none; }
+.plot svg { display: block; overflow: visible; max-width: 100%; height: auto; }
+.plot svg:focus-visible { outline: 2px dashed var(--ink); outline-offset: 4px; }
+.plot text { font: 11px var(--mono); fill: var(--ink); }
+.plot text.lbl { font-weight: bold; font-size: 12px; }
+.plot text.tag { font-weight: bold; font-size: 11px; fill: var(--yellow); }
+.plot .tag-box { fill: var(--ink); }
+.plot .grid line { stroke: var(--ink); stroke-width: 1; stroke-dasharray: 1 5; }
+.plot .base { stroke: var(--ink); stroke-width: 3; stroke-linecap: square; }
+
+/* outside a line chart's panel (sparklines) lines keep an ink casing */
+.plot .casing { fill: none; stroke: var(--ink); stroke-width: 7; stroke-linejoin: miter; stroke-linecap: square; }
+.plot .line { fill: none; stroke-width: 3; stroke-linejoin: miter; stroke-linecap: square; }
+.plot .area { stroke: var(--ink); stroke-width: 2; stroke-linejoin: miter; }
+.plot .ridge { fill: none; stroke: var(--ink); stroke-width: 3; stroke-linejoin: miter; stroke-linecap: square; }
+.plot .dot { stroke: var(--ink); stroke-width: 2; stroke-linejoin: miter; }
+.plot .hair { stroke: var(--ink); stroke-width: 3; }
+
+/* a line chart is fat flat ribbons straight on the card, each casting a hard ink shadow like a slab.
+   with area, each series is a flat hill instead, its shadow showing along the ridge */
+.plot .ribbon { fill: none; stroke-width: 10; stroke-linejoin: bevel; stroke-linecap: butt; }
+.plot .ribbon-drop { fill: none; stroke: var(--ink); stroke-width: 10; stroke-linejoin: bevel; stroke-linecap: butt; }
+.plot .hill-drop, .plot .chip-drop { fill: var(--ink); }
+.plot .chip { stroke: var(--ink); stroke-width: 2; }
+.plot text.chip-text { font: 15px var(--display); }
+
+/* bars are slabs. hovering one presses it into its shadow, sliding along the axis line */
+.plot .bar { stroke: var(--ink); stroke-width: 2; }
+.plot .shadow { fill: var(--ink); }
+.plot .cat .face { transition: translate 60ms steps(2); }
+.plot .cat.on .face { translate: var(--drop) 0; }
+/* a press slides along the floor, never through it: columns go right, sideways bars go down */
+.plot .sideways .cat.on .face { translate: 0 var(--drop); }
+.plot .cat.on .shadow { visibility: hidden; }
+.plot.hovering .cat.on text.lbl { text-decoration: underline; }
+
+.plot .cell-bed { fill: var(--ink); }
+.plot .ring { fill: none; stroke: var(--blue); stroke-width: 3; }
+
+/* gauges are a few big shapes in loud paint: half a 16-sided face, a block per
+   zone, a fat needle, and the number underneath. the face takes --dial, the needle and the number
+   take --needle. pick an odd pair: blue and yellow, plum and lime, red and mint */
+.gauge { --dial: var(--blue); --needle: var(--yellow); }
+.plot .dial-drop { fill: var(--ink); }
+.plot .dial-face { fill: var(--dial); stroke: var(--ink); stroke-width: 3; stroke-linejoin: miter; }
+.plot .zone { stroke: var(--ink); stroke-width: 3; stroke-linejoin: miter; }
+.plot .zone.s-good { fill: var(--good); }
+.plot .zone.s-warning { fill: var(--warning); }
+.plot .zone.s-serious { fill: var(--serious); }
+.plot .zone.s-critical { fill: var(--critical); }
+.plot .needle { fill: var(--needle); stroke: var(--ink); stroke-width: 3; stroke-linejoin: miter; }
+.plot text.reading { font: bold 46px var(--display); fill: var(--needle); letter-spacing: -.03em; }
+
+/* the tooltip is an ink label: the title in yellow, values in white, names follow */
+.chart-tip { position: absolute; z-index: 5; pointer-events: none; padding: 6px 9px; font-size: 12px; line-height: 1.5; white-space: nowrap; }
+.chart-tip .t { margin-bottom: 2px; }
+.chart-tip .r { display: flex; align-items: center; gap: 7px; color: var(--white); }
+.chart-tip i { width: 10px; height: 10px; border-color: var(--white); }
+.chart-tip i.none { visibility: hidden; }
+
+.chart-table { overflow-x: auto; }
+.chart-table .table { width: 100%; box-shadow: none; }
+.chart:not(.tabled) > .chart-table { display: none; }
+.chart.tabled > .plot, .chart.tabled > .legend { display: none; }
+
+.gauge > .plot svg.dial { width: 100%; max-width: 300px; margin: 0 auto; }
+.gauge-foot { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px; font-size: 12px; }
+.gauge-foot .reading { font: bold 44px/1 var(--display); letter-spacing: -.03em; }
+
+/* a stat tile: the number is the chart. the delta is a sticker slapped on crooked */
+.stat { padding: 12px 14px 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; }
+.stat > .label { margin: 0; }
+.stat > .value { font: bold 48px/1 var(--display); letter-spacing: -.03em; }
+.stat > [data-spark], .stat > .spark { align-self: stretch; height: 34px; margin-top: 2px; }
+.delta {
+  display: inline-block;
+  padding: 1px 7px;
+  font: bold 12px/1.4 var(--mono);
+  color: var(--ink);
+  background: var(--white);
+  border: var(--line) solid var(--ink);
+  box-shadow: var(--drop-sm) var(--drop-sm) 0 var(--ink);
+  rotate: -2deg;
+}
+.delta.good { background: var(--good); }
+.delta.bad { background: var(--critical); rotate: 1.5deg; }
+
+/* status: a colored chip with an icon, then the word */
+.status { display: inline-flex; align-items: center; gap: 6px; font: bold 12px/1.3 var(--mono); text-transform: uppercase; letter-spacing: .06em; }
+.status::before {
+  content: "✓";
+  display: inline-grid;
+  place-content: center;
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--ink);
+  background: var(--good);
+  border: var(--line) solid var(--ink);
+  box-shadow: var(--drop-sm) var(--drop-sm) 0 var(--ink);
+}
+.status.warning::before { content: "!"; background: var(--warning); }
+.status.serious::before { content: "!!"; background: var(--serious); }
+.status.critical::before { content: "✕"; background: var(--critical); }
+
+
+/* ---------- colors: last, so they beat any component's default ---------- */
+
+.c-yellow { --c: var(--yellow); --fg: var(--ink); }
+.c-orange { --c: var(--orange); --fg: var(--ink); }
+.c-red    { --c: var(--red);    --fg: var(--ink); }
+.c-plum   { --c: var(--plum);   --fg: var(--white); }
+.c-blue   { --c: var(--blue);   --fg: var(--white); }
+.c-mint   { --c: var(--mint);   --fg: var(--ink); }
+.c-lime   { --c: var(--lime);   --fg: var(--ink); }
+.c-paper  { --c: var(--paper);  --fg: var(--ink); }
+.c-white  { --c: var(--white);  --fg: var(--ink); }
+.c-desk   { --c: var(--desk);   --fg: var(--white); }
+.c-ink    { --c: var(--ink);    --fg: var(--yellow); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker > *, .progress.busy::before, .toast, dialog.folder { animation: none; }
+}

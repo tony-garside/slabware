@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>home</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23ffd23f' stroke='%23000' stroke-width='3'/></svg>">
+  <link rel="stylesheet" href="../slabware.css">
+  <style>
+    /* the tiles, slabs and buttons come from slabware; this is just the page */
+    * { margin: 0; padding: 0; }
+
+    body { padding: 10vh 16px 64px; }
+
+    main { max-width: 880px; margin: 0 auto; }
+
+    a { text-decoration: none; }
+
+    /* everything else: one plain paper slab */
+    .rest {
+      margin-top: 40px;
+      --min: 150px;
+      padding: 14px 16px 16px;
+      font-size: 13px;
+    }
+
+    .rest h2 { font: bold 18px var(--display); margin-bottom: 2px; }
+
+    @media (max-width: 560px) {
+      body { padding-top: 20px; }
+      .tiles { grid-template-columns: 1fr 1fr; gap: 12px; }
+      .tile > a b { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="tiles grid" id="tiles"></div>
+    <div class="rest slab grid links" id="rest"></div>
+  </main>
+
+  <script>
+    // [name, note, color, url, [[sublink, url], ...]] — ordered by how often I click them
+    // a color like "#540d6e/#fff" also sets the text color
+    const TILES = [
+      ["mail", "inbox", "#ffd23f", "https://mail.google.com", [
+        ["calendar", "https://calendar.google.com"],
+      ]],
+      ["github", "pulls", "#ee4266", "https://github.com/pulls", [
+        ["issues", "https://github.com/issues"],
+        ["notifs", "https://github.com/notifications"],
+      ]],
+      ["claude", "the robot", "#3bceac", "https://claude.ai"],
+      ["news", "orange site", "#540d6e/#fff", "https://news.ycombinator.com"],
+      ["maps", "where", "#f78c3b", "https://maps.google.com"],
+      ["music", "loud", "#4361ee/#fff", "https://music.youtube.com"],
+    ];
+
+    // [group, [[name, note, url], ...]]
+    const REST = [
+      ["read", [
+        ["mdn", "", "https://developer.mozilla.org"],
+        ["caniuse", "", "https://caniuse.com"],
+      ]],
+      ["tools", [
+        ["regex101", "", "https://regex101.com"],
+        ["crontab", "guru", "https://crontab.guru"],
+      ]],
+      ["slabware", [
+        ["docs", "", "../index.html"],
+      ]],
+    ];
+
+    const esc = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
+    document.getElementById("tiles").innerHTML = TILES.map(([name, note, color, url, subs = []]) => {
+      const [c, fg] = color.split("/");
+      return `<div class="tile" style="--c:${c}${fg ? `;--fg:${fg}` : ""}">` +
+        `<a href="${esc(url)}"><b>${name}</b><span>${note || "&nbsp;"}</span></a>` +
+        (subs.length ? `<nav>${subs.map(([s, u]) => `<a class="btn sm" href="${esc(u)}">${s}</a>`).join("")}</nav>` : "") +
+        `</div>`;
+    }).join("");
+
+    document.getElementById("rest").innerHTML = REST.map(([group, links]) =>
+      `<section><h2>${group}</h2>` +
+      links.map(([name, note, url]) =>
+        `<a href="${esc(url)}">${name}${note ? ` <span>${note}</span>` : ""}</a>`).join("") +
+      `</section>`).join("");
+  </script>
+</body>
+</html>

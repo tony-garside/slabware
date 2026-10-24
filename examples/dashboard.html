@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ops desk</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%233bceac' stroke='%23000' stroke-width='3'/></svg>">
+  <link rel="stylesheet" href="../slabware.css">
+  <style>
+    /* the dashboard's own layout. the data below is made up */
+    body { padding: 32px 16px 80px; }
+    main { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+
+    .top { padding: 16px 18px; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; }
+    .top .h1 { font-size: 56px; }
+    .filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
+
+    .wide { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+    .halves { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .side { display: flex; flex-direction: column; gap: 24px; }
+    .wide { align-items: start; }
+    .wide > *, .halves > * { min-width: 0; }
+
+    @media (max-width: 860px) {
+      .wide, .halves { grid-template-columns: 1fr; }
+      .top .h1 { font-size: 40px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="slab c-yellow top">
+      <div>
+        <h1 class="h1 drop" style="color: var(--red)">ops desk</h1>
+        <span class="caps">fishtank · made-up numbers</span>
+      </div>
+      <!-- one row of filters, above everything they scope -->
+      <div class="filters">
+        <label><span class="label">range</span>
+          <select class="field" id="range">
+            <option value="7">last 7 days</option>
+            <option value="14" selected>last 14 days</option>
+            <option value="30">last 30 days</option>
+          </select>
+        </label>
+        <label><span class="label">env</span>
+          <select class="field" id="env">
+            <option value="prod">prod</option>
+            <option value="stage">stage</option>
+          </select>
+        </label>
+        <button class="btn" id="refresh">refresh</button>
+      </div>
+    </header>
+
+    <section class="grid" style="--min: 230px; --gap: 24px" id="stats"></section>
+
+    <section class="wide">
+      <figure class="slab chart c-mint" id="requests"></figure>
+      <div class="side">
+        <figure class="slab chart c-red" id="cpu" style="--dial: var(--blue); --needle: var(--yellow)"></figure>
+        <figure class="slab chart c-plum" id="memory" style="--dial: var(--lime); --needle: var(--plum)"></figure>
+      </div>
+    </section>
+
+    <section class="halves">
+      <figure class="slab chart c-lime" id="tickets"></figure>
+      <figure class="slab chart c-red" id="slow"></figure>
+    </section>
+
+    <figure class="slab chart c-blue" id="heat"></figure>
+
+    <section class="folder">
+      <header class="tab">recent deploys</header>
+      <div class="body" style="overflow-x: auto">
+        <table class="table" style="width: 100%; box-shadow: none">
+          <thead><tr><th>when</th><th>what</th><th>who</th><th>status</th></tr></thead>
+          <tbody id="deploys"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="../slabware.js"></script>
+  <script src="../slabware-charts.js"></script>
+  <script>
+    // a seeded random, so the same filters always draw the same made-up numbers
+    function rng(seed) {
+      return () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+    }
+
+    const zones = [
+      { upTo: 60, status: "good", label: "fine" },
+      { upTo: 80, status: "warning", label: "busy" },
+      { upTo: 90, status: "serious", label: "hot" },
+      { upTo: 100, status: "critical", label: "on fire" },
+    ];
+
+    function data(days, env) {
+      const r = rng(days * 31 + (env === "prod" ? 7 : 3));
+      const scale = env === "prod" ? 1 : .08;
+      const today = new Date(2026, 9, 23);
+      const x = Array.from({ length: days }, (_, i) => {
+        const d = new Date(today);
+        d.setDate(d.getDate() - (days - 1 - i));
+        return i === 0 || d.getDate() === 1 ? d.toLocaleString("en-US", { month: "short", day: "numeric" }).toLowerCase() : String(d.getDate());
+      });
+      const wave = (base, i) => Math.round(base * scale * (1 + i / days * .4) * ((i + 3) % 7 < 2 ? .7 : 1) * (.9 + r() * .2));
+      const requests = [["storefront", 4400], ["manager", 2200], ["admin", 650]].map(([name, base]) => ({ name, values: x.map((_, i) => wave(base, i)) }));
+      const total = requests.reduce((a, s) => a + s.values.at(-1), 0);
+      const prev = requests.reduce((a, s) => a + s.values.at(-8 < -days ? 0 : -8), 0);
+      const spark = base => Array.from({ length: 12 }, (_, i) => Math.round(base * (.8 + i / 40 + r() * .1)));
+      return {
+        x, requests,
+        stats: [
+          { c: "red", fg: "white", label: "requests today", value: total.toLocaleString("en-US"), delta: `${total >= prev ? "▲" : "▼"} ${Math.abs(Math.round((total / prev - 1) * 100))}% vs a week ago`, good: total >= prev, spark: spark(total) },
+          { c: "plum", fg: "lime", label: "signups", value: Math.round(1284 * scale * (days / 14)).toLocaleString("en-US"), delta: "▲ 12% vs last period", good: true, spark: spark(90) },
+          { c: "blue", fg: "yellow", label: "p95 latency", value: `${Math.round(212 + r() * 30)}ms`, delta: "▲ 38ms vs last period", good: false, spark: spark(200) },
+          { c: "orange", fg: "white", label: "error rate", value: `${(.4 + r() * .6).toFixed(1)}%`, delta: "▼ 0.2pt vs last period", good: true, spark: spark(10).reverse() },
+        ],
+        cpu: Math.round(35 + r() * 50),
+        memory: Math.round(55 + r() * 35),
+        tickets: ["may", "jun", "jul", "aug", "sep", "oct"].map(() => [Math.round(40 + r() * 25), Math.round(6 + r() * 10), Math.round(1 + r() * 5)]),
+        slow: [["/api/search", 1840], ["/api/items", 920], ["/manager/orders", 610], ["/admin/users", 380], ["/api/auth", 140]].map(([k, v]) => [k, Math.round(v * (.85 + r() * .3))]),
+        heat: Array.from({ length: 7 }, (_, d) => Array.from({ length: 24 }, (_, h) =>
+          Math.round((d > 4 ? 120 : 300) * scale * (1 + Math.sin((h - 8) / 24 * Math.PI * 2)) * (.85 + r() * .3)))),
+        deploys: [
+          ["10:42", "fishtank #6531", "tony", "good", "shipped"],
+          ["09:15", "manager typo fix", "tony", "warning", "slow rollout"],
+          ["yesterday", "search reindex", "ci", "critical", "rolled back"],
+          ["mon", "email templates", "ci", "good", "shipped"],
+        ],
+      };
+    }
+
+    function stats(list) {
+      const box = document.getElementById("stats");
+      box.replaceChildren();
+      for (const s of list) {
+        const tile = Object.assign(document.createElement("div"), { className: `slab stat c-${s.c}` });
+        if (s.fg) tile.style.setProperty("--fg", `var(--${s.fg})`);
+        const add = (cls, text) => tile.appendChild(Object.assign(document.createElement("span"), { className: cls, textContent: text }));
+        add("label caps", s.label);
+        add("value drop", s.value);
+        add(`delta ${s.good ? "good" : "bad"}`, s.delta);
+        const spark = tile.appendChild(Object.assign(document.createElement("div"), { className: "spark" }));
+        box.append(tile);
+        slabware.chart.spark(spark, s.spark);
+      }
+    }
+
+    function deploys(rows) {
+      const body = document.getElementById("deploys");
+      body.replaceChildren();
+      for (const [when, what, who, status, word] of rows) {
+        const tr = body.insertRow();
+        for (const v of [when, what, who]) tr.insertCell().textContent = v;
+        tr.insertCell().appendChild(Object.assign(document.createElement("span"), { className: `status ${status}`, textContent: word }));
+      }
+    }
+
+    let charts;
+    function draw() {
+      const d = data(+document.getElementById("range").value, document.getElementById("env").value);
+      stats(d.stats);
+      deploys(d.deploys);
+      const opts = {
+        requests: { title: "requests", note: "per day, by app", x: d.x, series: d.requests, height: 420 },
+        cpu: { title: "cpu", value: d.cpu, unit: "%", zones },
+        memory: { title: "memory", value: d.memory, unit: "%", zones, shape: "bar" },
+        tickets: {
+          title: "tickets", note: "by state, per month", stacked: true,
+          categories: ["may", "jun", "jul", "aug", "sep", "oct"],
+          series: ["closed", "open", "blocked"].map((name, k) => ({ name, values: d.tickets.map(t => t[k]) })),
+        },
+        slow: {
+          title: "slowest endpoints", note: "p95", horizontal: true,
+          categories: d.slow.map(s => s[0]), series: [{ name: "p95", values: d.slow.map(s => s[1]) }],
+          format: v => v.toLocaleString("en-US") + "ms",
+        },
+        heat: {
+          title: "traffic by hour", note: "requests, last week",
+          rows: ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+          cols: Array.from({ length: 24 }, (_, h) => String(h).padStart(2, "0")),
+          values: d.heat,
+        },
+      };
+      if (!charts) {
+        charts = {
+          requests: slabware.chart.line("#requests", opts.requests),
+          cpu: slabware.chart.gauge("#cpu", opts.cpu),
+          memory: slabware.chart.gauge("#memory", opts.memory),
+          tickets: slabware.chart.bar("#tickets", opts.tickets),
+          slow: slabware.chart.bar("#slow", opts.slow),
+          heat: slabware.chart.heatmap("#heat", opts.heat),
+        };
+      } else {
+        for (const k in charts) charts[k].update(opts[k]);
+      }
+    }
+
+    draw();
+    document.getElementById("range").addEventListener("change", draw);
+    document.getElementById("env").addEventListener("change", draw);
+    document.getElementById("refresh").addEventListener("click", () => {
+      draw();
+      slabware.toast("refreshed", { c: "mint" });
+    });
+  </script>
+</body>
+</html>
