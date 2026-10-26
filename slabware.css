@@ -482,6 +482,89 @@ select.field {
 @keyframes sw-march { to { background-position: 16px 0; } }
 
 
+/* ---------- loaders: for waits with no length to show ---------- */
+
+.loader { display: inline-block; flex: none; vertical-align: middle; }
+
+/* the 1997 wait cursor. sand drains in four steps, then the glass tips over. the shadow
+   is a hard drop-shadow on the loader, so it stays down and to the right as the glass turns.
+   c-* colors the sand */
+@property --sand { syntax: "<percentage>"; inherits: true; initial-value: 0%; }
+.hourglass {
+  --c: var(--yellow);
+  --glass: polygon(0 0, 100% 0, 100% 14%, 60% 50%, 100% 86%, 100% 100%, 0 100%, 0 86%, 40% 50%, 0 14%);
+  position: relative;
+  width: 26px;
+  height: 34px;
+  filter: drop-shadow(var(--drop-sm) var(--drop-sm) 0 var(--ink));
+}
+.hourglass::before, .hourglass::after {
+  --c: inherit;
+  content: "";
+  position: absolute;
+  inset: 0;
+  clip-path: var(--glass);
+  animation: sw-glass 1.8s steps(1, end) infinite;
+}
+.hourglass::before { background: var(--ink); }
+.hourglass::after {
+  inset: 4px 3px;
+  background: linear-gradient(var(--white) 0 calc(var(--sand) / 2), var(--c) 0 50%,
+                              var(--white) 0 calc(100% - var(--sand) / 2), var(--c) 0);
+}
+@keyframes sw-glass {
+  0% { --sand: 0%; rotate: 0deg; }
+  16% { --sand: 25%; }
+  32% { --sand: 50%; }
+  48% { --sand: 75%; }
+  64% { --sand: 100%; rotate: 0deg; }
+  82%, 100% { --sand: 100%; rotate: 90deg; }
+}
+
+/* a hi-fi's display: four bars in the series colors, jumping between heights */
+.eq { display: inline-flex; align-items: flex-end; gap: 4px; height: 32px; padding-right: var(--drop-sm); }
+.eq > i {
+  width: 9px;
+  background: var(--c);
+  border: var(--line) solid var(--ink);
+  box-shadow: var(--drop-sm) var(--drop-sm) 0 var(--ink);
+  animation: sw-eq .9s steps(1, end) infinite;
+}
+.eq > i:nth-child(1) { --c: var(--viz-1); height: 40%; }
+.eq > i:nth-child(2) { --c: var(--viz-2); height: 100%; animation-delay: -.45s; }
+.eq > i:nth-child(3) { --c: var(--viz-3); height: 25%; animation-delay: -.225s; }
+.eq > i:nth-child(4) { --c: var(--viz-4); height: 70%; animation-delay: -.675s; }
+@keyframes sw-eq { 0% { height: 40%; } 25% { height: 100%; } 50% { height: 25%; } 75% { height: 70%; } }
+
+/* a card turning over and over: it narrows to its ink edge and lands on a new loud face */
+.flip {
+  width: 28px;
+  height: 28px;
+  background: var(--yellow);
+  border: var(--line) solid var(--ink);
+  box-shadow: var(--drop) var(--drop) 0 var(--ink);
+  animation: sw-flip 1.6s steps(1, end) infinite;
+}
+@keyframes sw-flip {
+  0%  { scale: 1 1;   background: var(--yellow); }
+  14% { scale: .5 1;  background: var(--yellow); }
+  18% { scale: .12 1; background: var(--ink); }
+  21% { scale: .5 1;  background: var(--red); }
+  25% { scale: 1 1;   background: var(--red); }
+  39% { scale: .5 1;  background: var(--red); }
+  43% { scale: .12 1; background: var(--ink); }
+  46% { scale: .5 1;  background: var(--blue); }
+  50% { scale: 1 1;   background: var(--blue); }
+  64% { scale: .5 1;  background: var(--blue); }
+  68% { scale: .12 1; background: var(--ink); }
+  71% { scale: .5 1;  background: var(--mint); }
+  75% { scale: 1 1;   background: var(--mint); }
+  89% { scale: .5 1;  background: var(--mint); }
+  93% { scale: .12 1; background: var(--ink); }
+  96% { scale: .5 1;  background: var(--yellow); }
+}
+
+
 /* ---------- dialogs: a folder over a dithered desk ---------- */
 
 dialog.folder {
@@ -701,5 +784,6 @@ dialog.folder::backdrop { background: repeating-conic-gradient(var(--ink) 0 25%,
 .c-ink    { --c: var(--ink);    --fg: var(--yellow); }
 
 @media (prefers-reduced-motion: reduce) {
-  .ticker > *, .progress.busy::before, .toast, dialog.folder { animation: none; }
+  .ticker > *, .progress.busy::before, .toast, dialog.folder,
+  .hourglass::before, .hourglass::after, .eq > i, .flip { animation: none; }
 }

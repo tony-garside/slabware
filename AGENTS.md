@@ -105,6 +105,7 @@ Use only these colors: `yellow orange red plum blue mint lime`, plus `ink paper 
 | Checkbox / radio | `<label class="opt"><input class="check" type="checkbox"> on deploy</label>` |
 | Fieldset | `<fieldset class="group stack"><legend>notify</legend>…</fieldset>` |
 | Progress | `<div class="progress c-mint" role="progressbar" aria-valuenow="62" style="--v: .62"></div>`; unknown length: add `busy` |
+| Loader | `<span class="loader hourglass" role="status" aria-label="loading"></span>`, `loader flip`, or `loader eq` with four empty `<i>`; put a word next to it. `c-*` colors the hourglass sand |
 | Badge | `<span class="badge c-red">broken</span>` |
 | Stamp | `<span class="stamp c-blue">approved</span>` |
 | Callout | `<div class="slab callout c-orange" data-label="heads up">…</div>` |
